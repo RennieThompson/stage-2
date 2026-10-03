@@ -8,7 +8,7 @@ Update this file at the end of every task.
 | #   | Task                                       | Status      |
 | --- | ------------------------------------------ | ----------- |
 | 0   | Foundation                                 | Done        |
-| 1   | Database                                   | Not started |
+| 1   | Database                                   | Done        |
 | 2   | Authentication                             | Not started |
 | 3   | Catalog pages                              | Not started |
 | 4   | Cart                                       | Not started |
@@ -99,6 +99,78 @@ history, store settings, email events), the enums, the sequence for
 the `admin_update_order_status` / `admin_set_payment_status` RPCs, then run
 `npm run db:types`.
 
+## Task 1 - Database
+
+### Done
+
+- The Task 1 schema was already in `supabase/migrations/` and
+  `supabase/seed.sql` (added in the setup commit). Nothing was rewritten.
+- 7 enums: `user_role`, `product_status`, `order_status`, `payment_status`,
+  `payment_method`, `stock_policy`, `email_status`.
+- 15 tables: `store_settings`, `profiles`, `categories`, `products`,
+  `product_images`, `product_variants`, `carts`, `cart_items`, `addresses`,
+  `orders`, `order_items`, `order_status_history`, `payments`, `payment_events`,
+  `email_events`.
+- `profiles` is one-to-one with `auth.users` (`id` primary key, on delete
+  cascade) and has `role` = `customer` or `admin`.
+- `orders.user_id` is nullable for guest orders, and `orders.idempotency_key`
+  has a unique constraint.
+- `public.order_reference_seq` plus `public.generate_order_reference()` build
+  the `ORD-YYYY-NNNNNN` reference.
+- `updated_at` triggers on 10 tables through `public.set_updated_at()`.
+- `on_auth_user_created` calls `public.handle_new_user()`. It copies the name,
+  avatar and provider from the user metadata into `profiles`.
+- `public.is_admin()` is a security definer function with an empty search path.
+- RLS is on for all 15 tables. The public reads only `status = 'active'`
+  products and their categories, images and variants. Customers read only their
+  own profile, cart, addresses and orders. Guests cannot read `orders`. There are
+  no write policies on `orders`, `order_items`, `payments` or
+  `order_status_history`: those writes only happen through the RPCs.
+- Indexes for slugs, category, status, created date and product search (a
+  `search_vector` tsvector index plus a `pg_trgm` index on the product name).
+- Storage bucket `product-images` (public read). Only admins can insert, update
+  or delete files.
+- Store values (currency, delivery fee, low-stock limit, stock policy, payment
+  methods, bank instructions) live in `store_settings`, not in the code.
+- "Published" product means `products.status = 'active'`.
+- Applied to the cloud dev project with `supabase login`, `supabase link` and
+  `supabase db push --include-seed`, so the migrations and the seed are on the
+  remote. `npx supabase migration list` shows local and remote agree on
+  `20261002000001` to `20261002000004`.
+- Generated `lib/database.types.ts` with `npm run db:types`.
+
+### Not done
+
+- No `product_images` rows are seeded (deliberate). The shop shows no product
+  photography until Task 8.
+- `.env.local` has no `SUPABASE_SECRET_KEY` and no `MAILGUN_*` yet. Task 5 and
+  Task 6 need them.
+- No app code reads these tables yet. That starts in Task 2.
+
+### Problems
+
+- Task 5 SQL already exists. `place_order` and the payment functions
+  (`order_summary`, `mark_order_paid`, `mark_payment_failed`, `mark_refunded`,
+  `admin_update_order_status`, `admin_set_payment_status`, `_deduct_order_stock`,
+  `_restore_order_stock`, `_set_payment_status`) are in
+  `20261002000002_order_payment_functions.sql`. Task 5 is therefore mostly the
+  `lib/payments/` layer and the checkout wiring, not new SQL. Do not rewrite that
+  migration.
+- The migrations are applied now. Per `AGENTS.md`, do not edit them. Any change
+  needs a new file in `supabase/migrations/`.
+- `store_settings` has a public read policy (`using (true)`) on purpose: the
+  store name and the bank instructions are public. The dashboard showed no
+  errors.
+- The first admin must be promoted with `supabase/snippets/make-admin.sql` after
+  registering and confirming the email.
+
+### Next task
+
+Task 2 - Authentication: keep the `/auth/*` pages, add Google OAuth, prefill the
+forms from the profile that the database trigger creates, add the
+`requireAdmin()` helper and a session-aware header. Writes go through Server
+Actions.
+
 ## Later
 
 Out of scope for Version 1. Keep the architecture ready for these, but do not
@@ -128,3 +200,5 @@ not exact figures.
 | 0    | Read / search (exploration)       | ~96000 |
 | 0    | Edits and commands (implementation) | ~42000 |
 | 0    | Verify (typecheck / lint / build)  | ~8000  |
+| 1    | Read / search (schema inventory)   | ~22000 |
+| 1    | Commands (migration list, db:types) | ~4000  |
