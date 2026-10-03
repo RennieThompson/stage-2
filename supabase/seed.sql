@@ -12,7 +12,7 @@ insert into public.store_settings (
   'The Beauty Bar', null, '+2348061445550', 'NGN', 0,
   5, 'deduct_on_confirm', false,
   array['bank_transfer']::public.payment_method[],
-  'Pay by bank transfer to Opay, account number 8061445550, account name [ACCOUNT NAME]. Use your order reference as the transfer description. We confirm your order when we receive the payment.'
+  'Pay by bank transfer to Opay, account number 8061445550, account name The Beauty Bar. Use your order reference as the transfer description. We confirm your order when we receive the payment.'
 )
 on conflict (id) do update set
   store_name = excluded.store_name,

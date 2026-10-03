@@ -16,7 +16,7 @@ Values marked (settings) are in the `store_settings` table. An admin can change 
 
 ## Payment in Version 1 (no online payment)
 - How customers pay: Bank transfer only (settings)
-- Payment instructions: Opay, account number 8061445550, account name [FILL IN]. Use the order reference as the transfer description. (settings)
+- Payment instructions: Opay, account number 8061445550, account name The Beauty bar. Use the order reference as the transfer description. (settings)
 - Payment status of a new order: Pending
 - Can an admin change the payment status to "Paid" by hand? Yes
 - Online payment provider that you expect to use later: decide later

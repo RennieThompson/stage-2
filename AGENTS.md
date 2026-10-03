@@ -60,6 +60,10 @@ Version 1 has no online payment. But the code must be ready for a provider (for 
 - Data reads in `lib/queries`, writes in `lib/actions`.
 - Each data view has loading, empty and error states.
 - Accessible and mobile-first (375 px). Premium beauty design, with theme tokens from `docs/DECISIONS.md`.
+- cacheComponents is on. Read params, searchParams, cookies and dynamic data only inside a <Suspense> child. Keep the page shell static.
+- Do not use new Date() in components that are prerendered.
+- The route guard is in lib/supabase/proxy.ts. The root proxy.ts only calls it.
+
 
 ## Token budget rules
 - Read only the files that you need. Use search before you open a large file.

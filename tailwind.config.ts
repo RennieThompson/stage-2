@@ -10,7 +10,30 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-dm-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: [
+          "var(--font-playfair-display)",
+          "ui-serif",
+          "Georgia",
+          "serif",
+        ],
+        serif: [
+          "var(--font-playfair-display)",
+          "ui-serif",
+          "Georgia",
+          "serif",
+        ],
+      },
       colors: {
+        // Brand palette (docs/DECISIONS.md). Prefer the semantic tokens below
+        // in components; these are for brand art and accents.
+        brand: {
+          pink: "#F433AB",
+          ink: "#191923",
+          blush: "#EEE2DF",
+          white: "#FFFFFF",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -59,5 +82,8 @@ export default {
       },
     },
   },
+  // tailwindcss-animate is a CommonJS-only package with no type declarations,
+  // so it is loaded with require() here.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
